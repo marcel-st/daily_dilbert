@@ -271,6 +271,7 @@
         const searchForm = document.getElementById('search-form');
         const searchInput = document.getElementById('search-input');
         const searchButton = document.getElementById('search-button');
+        const comicContainer = document.getElementById('comic-container');
         const comicPanels = document.getElementById('comic-panels');
         const comicPanelsTrack = document.getElementById('comic-panels-track');
 
@@ -336,6 +337,12 @@
             comicPanels.scrollLeft = 0;
         }
 
+        function resetComicViewportPosition() {
+            comicPanels.scrollLeft = 0;
+            comicPanels.scrollTop = 0;
+            comicContainer.scrollTop = 0;
+        }
+
         function showSingleImageViewer() {
             hidePanelViewer();
             comicImage.style.display = 'block';
@@ -356,8 +363,11 @@
             });
 
             comicImage.style.display = 'none';
-            comicPanels.scrollLeft = 0;
             comicPanels.style.display = 'block';
+            resetComicViewportPosition();
+            requestAnimationFrame(() => {
+                comicPanels.scrollLeft = 0;
+            });
         }
 
         function detectPanelRanges(imageElement, sensitivityProfile = 'normal') {
@@ -560,6 +570,7 @@
                 return;
             }
 
+            resetComicViewportPosition();
             loadingIndicator.style.display = 'flex';
             comicImage.style.display = 'none';
             errorMessageDisplay.style.display = 'none';
