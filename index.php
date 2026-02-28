@@ -12,6 +12,7 @@
     <style>
         body {
             font-family: 'Roboto', sans-serif;
+            margin: 0;
         }
         .loading {
             position: fixed;
@@ -38,17 +39,25 @@
             100% { transform: rotate(360deg); }
         }
         #comic-image {
+            width: 100%;
             max-width: 100%;
             height: auto;
+            object-fit: contain;
+        }
+        #comic-container {
+            width: 100%;
         }
         #navigation {
             display: flex;
             justify-content: center;
             gap: 1rem;
             margin-top: 1rem;
+            width: 100%;
+            flex-wrap: wrap;
         }
         #prev-button, #next-button {
             padding: 0.5rem 1rem;
+            min-height: 44px;
             border-radius: 0.375rem;
             font-weight: 500;
             color: white;
@@ -57,6 +66,8 @@
             cursor: pointer;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
+            white-space: nowrap;
         }
         #prev-button:hover, #next-button:hover {
             background-color: #2563eb;
@@ -67,7 +78,7 @@
             opacity: 0.6;
         }
         .container {
-            max-width: 90%;
+            width: min(980px, 100%);
             margin-left: auto;
             margin-right: auto;
             padding-left: 1rem;
@@ -90,16 +101,20 @@
             margin-bottom: 1rem;
             display: flex;
             justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
         #search-input {
             padding: 0.5rem;
             border-radius: 0.375rem;
             border: 1px solid #d1d5db;
-            margin-right: 0.5rem;
-            width: 150px;
+            width: min(100%, 280px);
+            min-height: 44px;
         }
         #search-button {
             padding: 0.5rem 1rem;
+            min-height: 44px;
             border-radius: 0.375rem;
             background-color: #3b82f6;
             color: white;
@@ -115,6 +130,65 @@
             cursor: not-allowed;
             opacity: 0.6;
         }
+        @media (max-width: 640px) {
+            .container {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+                margin-top: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+            #search-form {
+                width: 100%;
+                align-items: stretch;
+            }
+            #search-input,
+            #search-button,
+            #prev-button,
+            #next-button {
+                width: 100%;
+            }
+            #navigation {
+                gap: 0.5rem;
+            }
+            #comic-image {
+                max-height: 72vh;
+            }
+        }
+        @media (max-width: 400px) {
+            .container {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+            #search-form {
+                gap: 0.375rem;
+                margin-bottom: 0.75rem;
+            }
+            #comic-date {
+                font-size: 0.8125rem;
+            }
+            #comic-image {
+                max-height: 68vh;
+            }
+        }
+        @media (orientation: landscape) and (max-height: 520px) {
+            .container {
+                margin-top: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+            #viewer-title {
+                font-size: 1.125rem;
+                margin-bottom: 0.5rem;
+            }
+            #search-form {
+                margin-bottom: 0.5rem;
+            }
+            #comic-image {
+                max-height: 58vh;
+            }
+            #navigation {
+                margin-top: 0.5rem;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -124,10 +198,10 @@
     </div>
 
     <div class="container">
-        <h1 class="text-2xl font-semibold text-gray-800 mb-4 text-center">Historical Dilbert Comic Viewer</h1>
+        <h1 id="viewer-title" class="text-lg sm:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4 text-center">Historical Dilbert Comic Viewer</h1>
 
         <form id="search-form" class="flex justify-center">
-            <input type="text" id="search-input" placeholder="Search by date (YYYY-MM-DD)" class="rounded-md">
+            <input type="date" id="search-input" placeholder="Search by date" class="rounded-md" aria-label="Search comic by date">
             <button id="search-button" type="submit" class="bg-blue-500 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-700">Search</button>
         </form>
 

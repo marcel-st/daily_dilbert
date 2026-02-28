@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [v1.0.1] - 2026-02-28
+
+### Changed
+- Improved mobile responsiveness of the comic viewer UI in `index.php`:
+	- Search and navigation controls now stack cleanly on small screens.
+	- Touch targets for form and navigation controls were increased for better usability.
+	- Comic image sizing was adjusted to avoid overflow and preserve visibility of controls.
+	- Added landscape-phone breakpoint tuning for compact-height devices.
+- Updated `README.md` to document responsive UI/mobile support in the included feature set.
+
 ## [v1.0.0] - 2026-02-28
 
 ### Added

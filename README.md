@@ -12,6 +12,7 @@ If the folder is missing or empty, it downloads and extracts:
 - Apache + PHP runtime image (`php:8.3-apache`)
 - Startup bootstrap script that downloads/extracts the comics archive
 - Docker Compose service for one-command deploys
+- Responsive comic viewer UI optimized for mobile, including stacked touch-friendly controls and improved landscape-phone behavior
 
 ## Requirements
 
@@ -119,6 +120,27 @@ docker compose up -d --build
 - `permission denied /var/run/docker.sock`: run commands with a user that has Docker daemon access.
 - comics not showing: check container logs and verify outbound access to `cds.xocloud.nl`.
 - port already in use: change host binding, for example `-p 8080:80`.
+
+## Mobile UX
+
+The viewer is responsive and optimized for touch devices.
+
+### Behavior on small screens
+
+- Search and navigation controls stack into full-width rows on narrow viewports.
+- Buttons and input fields use larger touch targets for easier tapping.
+- Comic images scale to screen width and keep aspect ratio.
+- Extra layout tuning is applied for short-height landscape phone screens.
+
+### Quick verification checklist
+
+Use browser device emulation or a real phone and validate:
+
+- [ ] Portrait ~390×844 (modern phone): search field + button are easy to tap.
+- [ ] Portrait ~320×568 (small phone): no horizontal scroll, controls remain readable.
+- [ ] Landscape with low height (for example ~844×390): title/search/nav remain visible without crowding.
+- [ ] Navigation buttons (`Previous`/`Next`) remain accessible after comic image loads.
+- [ ] Date search input opens native date picker and loads the matching comic.
 
 ## Server deployment checklist
 
