@@ -1,0 +1,9 @@
+services:
+  daily-dilbert:
+    build:
+      context: .
+    image: daily-dilbert:latest
+    container_name: daily-dilbert
+    ports:
+      - "80:80"
+    restart: unless-stopped
