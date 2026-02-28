@@ -47,6 +47,30 @@
         #comic-container {
             width: 100%;
         }
+        #comic-panels {
+            display: none;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
+        }
+        #comic-panels-track {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+        .comic-panel {
+            flex: 0 0 100%;
+            scroll-snap-align: start;
+            display: flex;
+            justify-content: center;
+        }
+        .comic-panel img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
         #navigation {
             display: flex;
             justify-content: center;
@@ -153,6 +177,12 @@
             #comic-image {
                 max-height: 72vh;
             }
+            #comic-panels {
+                max-height: 72vh;
+            }
+            #comic-panels-track {
+                gap: 0.5rem;
+            }
         }
         @media (max-width: 400px) {
             .container {
@@ -169,6 +199,9 @@
             #comic-image {
                 max-height: 68vh;
             }
+            #comic-panels {
+                max-height: 68vh;
+            }
         }
         @media (orientation: landscape) and (max-height: 520px) {
             .container {
@@ -183,6 +216,9 @@
                 margin-bottom: 0.5rem;
             }
             #comic-image {
+                max-height: 58vh;
+            }
+            #comic-panels {
                 max-height: 58vh;
             }
             #navigation {
@@ -207,6 +243,9 @@
 
         <div id="comic-container" class="max-w-full flex justify-center mb-4 flex-col items-center">
             <img id="comic-image" src="" alt="Comic" class="rounded-lg shadow-md" style="display: none;">
+            <div id="comic-panels" aria-label="Comic panels">
+                <div id="comic-panels-track"></div>
+            </div>
             <p id="comic-date" style="display: none;"></p>
         </div>
 
@@ -232,11 +271,266 @@
         const searchForm = document.getElementById('search-form');
         const searchInput = document.getElementById('search-input');
         const searchButton = document.getElementById('search-button');
+        const comicPanels = document.getElementById('comic-panels');
+        const comicPanelsTrack = document.getElementById('comic-panels-track');
 
 
         let currentComicIndex = 0;
         let comicFiles = [];
         let comicRoot = '/comics/';
+        let currentComicPath = '';
+        const panelCache = new Map();
+        const PANEL_SEPARATOR_SENSITIVITY = 'normal';
+        const PANEL_SENSITIVITY_PRESETS = {
+            strict: {
+                whiteThreshold: 248,
+                minWhiteRatio: 0.993,
+                rowSampleDivisor: 300,
+                edgeMarginRatio: 0.04,
+                minSeparatorWidthRatio: 0.003,
+                minPanelWidthRatio: 0.10,
+                maxPanelCount: 6
+            },
+            normal: {
+                whiteThreshold: 245,
+                minWhiteRatio: 0.985,
+                rowSampleDivisor: 250,
+                edgeMarginRatio: 0.03,
+                minSeparatorWidthRatio: 0.002,
+                minPanelWidthRatio: 0.08,
+                maxPanelCount: 7
+            },
+            loose: {
+                whiteThreshold: 238,
+                minWhiteRatio: 0.965,
+                rowSampleDivisor: 220,
+                edgeMarginRatio: 0.02,
+                minSeparatorWidthRatio: 0.001,
+                minPanelWidthRatio: 0.07,
+                maxPanelCount: 8
+            }
+        };
+
+        function getSensitivityPreset(profileName) {
+            return PANEL_SENSITIVITY_PRESETS[profileName] || PANEL_SENSITIVITY_PRESETS.normal;
+        }
+
+        function getSensitivityScanOrder() {
+            const validProfiles = ['strict', 'normal', 'loose'];
+            const preferredProfile = validProfiles.includes(PANEL_SEPARATOR_SENSITIVITY)
+                ? PANEL_SEPARATOR_SENSITIVITY
+                : 'normal';
+            return [
+                preferredProfile,
+                ...validProfiles.filter((profileName) => profileName !== preferredProfile)
+            ];
+        }
+
+        function isMobileViewport() {
+            return window.matchMedia('(max-width: 768px)').matches;
+        }
+
+        function hidePanelViewer() {
+            comicPanels.style.display = 'none';
+            comicPanelsTrack.innerHTML = '';
+            comicPanels.scrollLeft = 0;
+        }
+
+        function showSingleImageViewer() {
+            hidePanelViewer();
+            comicImage.style.display = 'block';
+        }
+
+        function showPanelViewer(panelSources) {
+            comicPanelsTrack.innerHTML = '';
+            panelSources.forEach((panelSource, panelIndex) => {
+                const panelWrapper = document.createElement('div');
+                panelWrapper.className = 'comic-panel';
+
+                const panelImage = document.createElement('img');
+                panelImage.src = panelSource;
+                panelImage.alt = `Comic panel ${panelIndex + 1}`;
+
+                panelWrapper.appendChild(panelImage);
+                comicPanelsTrack.appendChild(panelWrapper);
+            });
+
+            comicImage.style.display = 'none';
+            comicPanels.scrollLeft = 0;
+            comicPanels.style.display = 'block';
+        }
+
+        function detectPanelRanges(imageElement, sensitivityProfile = 'normal') {
+            const imageWidth = imageElement.naturalWidth;
+            const imageHeight = imageElement.naturalHeight;
+            const preset = getSensitivityPreset(sensitivityProfile);
+
+            if (!imageWidth || !imageHeight || imageWidth < 200) {
+                return [{ start: 0, end: Math.max(0, imageWidth - 1) }];
+            }
+
+            const analysisCanvas = document.createElement('canvas');
+            analysisCanvas.width = imageWidth;
+            analysisCanvas.height = imageHeight;
+            const analysisContext = analysisCanvas.getContext('2d', { willReadFrequently: true });
+            analysisContext.drawImage(imageElement, 0, 0);
+            const { data } = analysisContext.getImageData(0, 0, imageWidth, imageHeight);
+
+            const sampledRows = [];
+            const rowStep = Math.max(1, Math.floor(imageHeight / preset.rowSampleDivisor));
+            for (let y = 0; y < imageHeight; y += rowStep) {
+                sampledRows.push(y);
+            }
+
+            const whiteColumns = new Array(imageWidth).fill(false);
+
+            for (let x = 0; x < imageWidth; x++) {
+                let whitePixelCount = 0;
+                for (let i = 0; i < sampledRows.length; i++) {
+                    const y = sampledRows[i];
+                    const offset = (y * imageWidth + x) * 4;
+                    const red = data[offset];
+                    const green = data[offset + 1];
+                    const blue = data[offset + 2];
+                    if (red >= preset.whiteThreshold && green >= preset.whiteThreshold && blue >= preset.whiteThreshold) {
+                        whitePixelCount++;
+                    }
+                }
+                whiteColumns[x] = (whitePixelCount / sampledRows.length) >= preset.minWhiteRatio;
+            }
+
+            const separatorRuns = [];
+            let runStart = -1;
+            for (let x = 0; x < imageWidth; x++) {
+                if (whiteColumns[x]) {
+                    if (runStart === -1) {
+                        runStart = x;
+                    }
+                } else if (runStart !== -1) {
+                    separatorRuns.push({ start: runStart, end: x - 1 });
+                    runStart = -1;
+                }
+            }
+            if (runStart !== -1) {
+                separatorRuns.push({ start: runStart, end: imageWidth - 1 });
+            }
+
+            const edgeMargin = Math.floor(imageWidth * preset.edgeMarginRatio);
+            const minSeparatorWidth = Math.max(2, Math.floor(imageWidth * preset.minSeparatorWidthRatio));
+            const usefulSeparators = separatorRuns.filter((run) => {
+                const runWidth = run.end - run.start + 1;
+                return runWidth >= minSeparatorWidth && run.start > edgeMargin && run.end < imageWidth - edgeMargin;
+            });
+
+            const ranges = [];
+            let segmentStart = 0;
+            for (let i = 0; i < usefulSeparators.length; i++) {
+                const separator = usefulSeparators[i];
+                const segmentEnd = separator.start - 1;
+                if (segmentEnd >= segmentStart) {
+                    ranges.push({ start: segmentStart, end: segmentEnd });
+                }
+                segmentStart = separator.end + 1;
+            }
+            if (segmentStart <= imageWidth - 1) {
+                ranges.push({ start: segmentStart, end: imageWidth - 1 });
+            }
+
+            const minPanelWidth = Math.max(80, Math.floor(imageWidth * preset.minPanelWidthRatio));
+            const filteredRanges = ranges.filter((range) => (range.end - range.start + 1) >= minPanelWidth);
+
+            if (filteredRanges.length <= 1 || filteredRanges.length > preset.maxPanelCount) {
+                return [{ start: 0, end: imageWidth - 1 }];
+            }
+
+            return filteredRanges;
+        }
+
+        function buildPanelSources(imageElement, ranges) {
+            const imageHeight = imageElement.naturalHeight;
+            const panelSources = [];
+
+            for (let i = 0; i < ranges.length; i++) {
+                const range = ranges[i];
+                const panelWidth = range.end - range.start + 1;
+                if (panelWidth <= 0) {
+                    continue;
+                }
+
+                const panelCanvas = document.createElement('canvas');
+                panelCanvas.width = panelWidth;
+                panelCanvas.height = imageHeight;
+                const panelContext = panelCanvas.getContext('2d');
+                panelContext.drawImage(
+                    imageElement,
+                    range.start,
+                    0,
+                    panelWidth,
+                    imageHeight,
+                    0,
+                    0,
+                    panelWidth,
+                    imageHeight
+                );
+                panelSources.push(panelCanvas.toDataURL('image/png'));
+            }
+
+            return panelSources;
+        }
+
+        function getPanelDataForCurrentComic() {
+            if (!currentComicPath) {
+                return { hasPanels: false, panels: [] };
+            }
+
+            if (panelCache.has(currentComicPath)) {
+                return panelCache.get(currentComicPath);
+            }
+
+            const sensitivityOrder = getSensitivityScanOrder();
+            let selectedRanges = [{ start: 0, end: comicImage.naturalWidth - 1 }];
+
+            for (let i = 0; i < sensitivityOrder.length; i++) {
+                const sensitivityProfile = sensitivityOrder[i];
+                const candidateRanges = detectPanelRanges(comicImage, sensitivityProfile);
+                if (candidateRanges.length > 1) {
+                    selectedRanges = candidateRanges;
+                    break;
+                }
+            }
+
+            if (selectedRanges.length <= 1) {
+                const noPanels = { hasPanels: false, panels: [] };
+                panelCache.set(currentComicPath, noPanels);
+                return noPanels;
+            }
+
+            const panelSources = buildPanelSources(comicImage, selectedRanges);
+            const panelData = {
+                hasPanels: panelSources.length > 1,
+                panels: panelSources
+            };
+            panelCache.set(currentComicPath, panelData);
+            return panelData;
+        }
+
+        function renderComicForViewport() {
+            if (!comicImage.src) {
+                return;
+            }
+
+            if (!isMobileViewport()) {
+                showSingleImageViewer();
+                return;
+            }
+
+            const panelData = getPanelDataForCurrentComic();
+            if (panelData.hasPanels) {
+                showPanelViewer(panelData.panels);
+            } else {
+                showSingleImageViewer();
+            }
+        }
 
         async function getComicList() {
             try {
@@ -278,6 +572,7 @@
             localStorage.setItem('lastViewedIndex', index); // Save progress here
             const comicFile = comicFiles[index];
             const comicPath = comicRoot + comicFile;
+            currentComicPath = comicPath;
 
             try {
                 const imgResponse = await fetch(comicPath, { method: 'HEAD' });
@@ -288,6 +583,7 @@
                 comicImage.onload = () => {
                     loadingIndicator.style.display = 'none';
                     comicImage.style.display = 'block';
+                    hidePanelViewer();
                     navigation.style.display = 'flex';
 
                     const datePart = comicFile.match(/^\d{4}\/(\d{4}-\d{2}-\d{2})_/);
@@ -302,15 +598,19 @@
                         comicDateDisplay.textContent = '';
                         comicDateDisplay.style.display = 'none';
                     }
+
+                    renderComicForViewport();
                 };
                 comicImage.onerror = () => {
                     loadingIndicator.style.display = 'none';
+                    hidePanelViewer();
                     errorMessage(`Failed to load comic: ${comicPath}`);
                 };
 
             } catch (error) {
                 console.error("Error loading comic:", error);
                 loadingIndicator.style.display = 'none';
+                hidePanelViewer();
                 errorMessage(`Failed to load comic.  Check console for error details.`);
             }
         }
@@ -320,6 +620,12 @@
             errorMessageDisplay.style.display = 'block';
             navigation.style.display = 'none';
         }
+
+        window.addEventListener('resize', () => {
+            if (comicImage.complete && comicImage.naturalWidth > 0) {
+                renderComicForViewport();
+            }
+        });
 
         function formatDate(dateString) {
             try {

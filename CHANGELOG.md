@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## [v1.0.2] - 2026-03-01
+
+### Changed
+- Added mobile-only comic panel side-scrolling in `index.php` by detecting white vertical separators and splitting strips into swipeable panels.
+- Added adaptive separator detection sensitivity with strict/normal/loose presets and fallback scanning order for more reliable panel detection across comics.
+- Added automatic fallback to full-image rendering when panel detection is not reliable.
+- Updated `README.md` Mobile UX documentation and verification checklist for panel swipe behavior and fallback expectations.
+
 ## [v1.0.1] - 2026-02-28
 
 ### Changed

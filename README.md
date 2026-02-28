@@ -131,6 +131,8 @@ The viewer is responsive and optimized for touch devices.
 - Buttons and input fields use larger touch targets for easier tapping.
 - Comic images scale to screen width and keep aspect ratio.
 - Extra layout tuning is applied for short-height landscape phone screens.
+- On mobile, comics can split into swipeable panels using detected white vertical separators between strips.
+- If separator detection does not find a reliable split, the viewer automatically falls back to the full comic image.
 
 ### Quick verification checklist
 
@@ -141,6 +143,8 @@ Use browser device emulation or a real phone and validate:
 - [ ] Landscape with low height (for example ~844×390): title/search/nav remain visible without crowding.
 - [ ] Navigation buttons (`Previous`/`Next`) remain accessible after comic image loads.
 - [ ] Date search input opens native date picker and loads the matching comic.
+- [ ] Multi-strip comic on mobile: horizontal swipe moves cleanly between detected panels.
+- [ ] Comic without clear separators: full-image fallback is shown (no broken splits).
 
 ## Server deployment checklist
 
