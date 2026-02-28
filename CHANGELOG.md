@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [v1.0.4] - 2026-03-01
+
+### Fixed
+- Hardened mobile panel scroll reset when switching comics to prevent browsers from keeping the previous horizontal position.
+- Added repeated post-render scroll resets (animation frame + delayed passes) to reliably return to panel 1 on navigation.
+
 ## [v1.0.3] - 2026-03-01
 
 ### Fixed

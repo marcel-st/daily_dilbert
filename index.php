@@ -53,6 +53,9 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             scroll-snap-type: x mandatory;
+            scroll-behavior: auto;
+            overflow-anchor: none;
+            overscroll-behavior-x: contain;
         }
         #comic-panels-track {
             display: flex;
@@ -340,7 +343,20 @@
         function resetComicViewportPosition() {
             comicPanels.scrollLeft = 0;
             comicPanels.scrollTop = 0;
+            comicPanels.scrollTo(0, 0);
             comicContainer.scrollTop = 0;
+        }
+
+        function forceResetComicViewportPosition() {
+            resetComicViewportPosition();
+            requestAnimationFrame(() => {
+                resetComicViewportPosition();
+                requestAnimationFrame(() => {
+                    resetComicViewportPosition();
+                });
+            });
+            setTimeout(resetComicViewportPosition, 60);
+            setTimeout(resetComicViewportPosition, 160);
         }
 
         function showSingleImageViewer() {
@@ -364,10 +380,7 @@
 
             comicImage.style.display = 'none';
             comicPanels.style.display = 'block';
-            resetComicViewportPosition();
-            requestAnimationFrame(() => {
-                comicPanels.scrollLeft = 0;
-            });
+            forceResetComicViewportPosition();
         }
 
         function detectPanelRanges(imageElement, sensitivityProfile = 'normal') {
@@ -570,7 +583,7 @@
                 return;
             }
 
-            resetComicViewportPosition();
+            forceResetComicViewportPosition();
             loadingIndicator.style.display = 'flex';
             comicImage.style.display = 'none';
             errorMessageDisplay.style.display = 'none';
