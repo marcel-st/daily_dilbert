@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dilbert.xo.nl/sitemap.xml
