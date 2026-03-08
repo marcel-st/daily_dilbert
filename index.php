@@ -1,14 +1,49 @@
+<?php
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$canonicalUrl = $scheme . '://' . $host . '/';
+$siteTitle = 'Historical Dilbert Comic Viewer';
+$siteDescription = 'Browse and search historical Dilbert comics by date, optimized for mobile and desktop reading.';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historical Dilbert Viewer</title>
+    <title><?php echo htmlspecialchars($siteTitle, ENT_QUOTES, 'UTF-8'); ?></title>
+    <meta name="description" content="<?php echo htmlspecialchars($siteDescription, ENT_QUOTES, 'UTF-8'); ?>">
+    <meta name="robots" content="index,follow,max-image-preview:large">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="canonical" href="<?php echo htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8'); ?>">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<?php echo htmlspecialchars($siteTitle, ENT_QUOTES, 'UTF-8'); ?>">
+    <meta property="og:description" content="<?php echo htmlspecialchars($siteDescription, ENT_QUOTES, 'UTF-8'); ?>">
+    <meta property="og:url" content="<?php echo htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8'); ?>">
+    <meta property="og:image" content="<?php echo htmlspecialchars($canonicalUrl . 'comics/1989/1989-04-16_dog_brain_animals.gif', ENT_QUOTES, 'UTF-8'); ?>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?php echo htmlspecialchars($siteTitle, ENT_QUOTES, 'UTF-8'); ?>">
+    <meta name="twitter:description" content="<?php echo htmlspecialchars($siteDescription, ENT_QUOTES, 'UTF-8'); ?>">
+    <meta name="twitter:image" content="<?php echo htmlspecialchars($canonicalUrl . 'comics/1989/1989-04-16_dog_brain_animals.gif', ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": <?php echo json_encode($siteTitle, JSON_UNESCAPED_SLASHES); ?>,
+            "url": <?php echo json_encode($canonicalUrl, JSON_UNESCAPED_SLASHES); ?>,
+            "description": <?php echo json_encode($siteDescription, JSON_UNESCAPED_SLASHES); ?>,
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": <?php echo json_encode($canonicalUrl . '?date={search_term_string}', JSON_UNESCAPED_SLASHES); ?>,
+                "query-input": "required name=search_term_string"
+            }
+        }
+        </script>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
