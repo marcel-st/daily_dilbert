@@ -557,7 +557,7 @@
 
         async function getComicList() {
             try {
-                const response = await fetch('get_comics.php?root=' + encodeURIComponent(comicRoot));
+                const response = await fetch('get_comics.php');
                 if (!response.ok) {
                     throw new Error(`Failed to fetch comic list: ${response.status}`);
                 }
@@ -578,7 +578,7 @@
             }
         }
 
-        async function loadComic(index) {
+        function loadComic(index) {
             if (index < 0 || index >= comicFiles.length) {
                 return;
             }
@@ -598,45 +598,34 @@
             const comicPath = comicRoot + comicFile;
             currentComicPath = comicPath;
 
-            try {
-                const imgResponse = await fetch(comicPath, { method: 'HEAD' });
-                if (!imgResponse.ok) {
-                    throw new Error(`Comic image not found: ${comicPath}`);
+            comicImage.onload = () => {
+                loadingIndicator.style.display = 'none';
+                comicImage.style.display = 'block';
+                hidePanelViewer();
+                navigation.style.display = 'flex';
+
+                const datePart = comicFile.match(/^\d{4}\/(\d{4}-\d{2}-\d{2})_/);
+                console.log("Filename:", comicFile);
+                console.log("datePart:", datePart);
+
+                if (datePart && datePart[1]) {
+                    const formattedDate = formatDate(datePart[1]);
+                    comicDateDisplay.textContent = formattedDate;
+                    comicDateDisplay.style.display = 'block';
+                } else {
+                    comicDateDisplay.textContent = '';
+                    comicDateDisplay.style.display = 'none';
                 }
-                comicImage.src = comicPath;
-                comicImage.onload = () => {
-                    loadingIndicator.style.display = 'none';
-                    comicImage.style.display = 'block';
-                    hidePanelViewer();
-                    navigation.style.display = 'flex';
 
-                    const datePart = comicFile.match(/^\d{4}\/(\d{4}-\d{2}-\d{2})_/);
-                    console.log("Filename:", comicFile);
-                    console.log("datePart:", datePart);
-
-                    if (datePart && datePart[1]) {
-                        const formattedDate = formatDate(datePart[1]);
-                        comicDateDisplay.textContent = formattedDate;
-                        comicDateDisplay.style.display = 'block';
-                    } else {
-                        comicDateDisplay.textContent = '';
-                        comicDateDisplay.style.display = 'none';
-                    }
-
-                    renderComicForViewport();
-                };
-                comicImage.onerror = () => {
-                    loadingIndicator.style.display = 'none';
-                    hidePanelViewer();
-                    errorMessage(`Failed to load comic: ${comicPath}`);
-                };
-
-            } catch (error) {
-                console.error("Error loading comic:", error);
+                renderComicForViewport();
+            };
+            comicImage.onerror = () => {
                 loadingIndicator.style.display = 'none';
                 hidePanelViewer();
-                errorMessage(`Failed to load comic.  Check console for error details.`);
-            }
+                errorMessage(`Failed to load comic: ${comicPath}`);
+            };
+
+            comicImage.src = comicPath;
         }
 
         function errorMessage(message) {

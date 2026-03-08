@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [v1.1.0] - 2026-03-08
+
+### Changed
+- Hardened `get_comics.php` by removing user-controlled root input and always resolving comics from `/comics` under the document root.
+- Added explicit API response behavior in `get_comics.php` with proper JSON status handling (`200`, `304`, `404`, `500`) and short-lived list caching via `ETag` + `Cache-Control`.
+- Updated `index.php` comic loading flow to remove the per-image `HEAD` preflight request and rely on image `onload`/`onerror` handling.
+- Added Apache cache policy config (`apache-cache.conf`) and enabled it in the image build for long-lived comic image caching and revalidation-friendly dynamic page caching.
+
+### Security
+- Added mandatory SHA-256 archive verification in `docker-entrypoint.sh` before extraction, with startup failure on checksum mismatch.
+- Added `COMICS_ARCHIVE_SHA256` configuration documentation and usage guidance in `README.md`.
+
 ## [v1.0.4] - 2026-03-01
 
 ### Fixed

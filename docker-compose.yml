@@ -2,7 +2,7 @@ services:
   daily-dilbert:
     build:
       context: .
-    image: daily-dilbert:latest
+    image: daily-dilbert:v1.1.0
     container_name: daily-dilbert
     ports:
       - "80:80"

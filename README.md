@@ -43,13 +43,13 @@ docker compose down
 Build image:
 
 ```bash
-docker build -t daily-dilbert:latest .
+docker build -t daily-dilbert:v1.1.0 .
 ```
 
 Run container:
 
 ```bash
-docker run -d --restart unless-stopped -p 80:80 --name daily-dilbert daily-dilbert:latest
+docker run -d --restart unless-stopped -p 80:80 --name daily-dilbert daily-dilbert:v1.1.0
 ```
 
 ## Deploy to a remote Docker host
@@ -65,8 +65,8 @@ Or with plain Docker:
 
 ```bash
 export DOCKER_HOST=ssh://user@remote-host
-docker build -t daily-dilbert:latest .
-docker run -d --restart unless-stopped -p 80:80 --name daily-dilbert daily-dilbert:latest
+docker build -t daily-dilbert:v1.1.0 .
+docker run -d --restart unless-stopped -p 80:80 --name daily-dilbert daily-dilbert:v1.1.0
 ```
 
 ## Configuration
@@ -74,6 +74,7 @@ docker run -d --restart unless-stopped -p 80:80 --name daily-dilbert daily-dilbe
 Environment variables supported by the container:
 
 - `COMICS_ARCHIVE_URL` (default: `https://cds.xocloud.nl/mta1ujxiq8ln1rl/dilbert-comics.tgz`)
+- `COMICS_ARCHIVE_SHA256` (default: `521749868533259f1a5d78baa594202bc8362cf9b60b35c0d315100f4a41a87e`)
 - `WEB_ROOT` (default: `/var/www/html`)
 
 Example:
@@ -81,8 +82,20 @@ Example:
 ```bash
 docker run -d --restart unless-stopped -p 80:80 \
   -e COMICS_ARCHIVE_URL=https://example.org/dilbert-comics.tgz \
-  --name daily-dilbert daily-dilbert:latest
+  -e COMICS_ARCHIVE_SHA256=<sha256-of-archive> \
+  --name daily-dilbert daily-dilbert:v1.1.0
 ```
+
+If you change `COMICS_ARCHIVE_URL`, always set the matching `COMICS_ARCHIVE_SHA256` value. The container now refuses to extract archives when checksum verification fails.
+
+## HTTP caching policy
+
+The image enables Apache response caching headers:
+
+- Comic images (`*.gif`): `Cache-Control: public, max-age=31536000, immutable`
+- Dynamic pages (`*.php`, `*.html`): `Cache-Control: no-cache, private, must-revalidate`
+
+This policy is defined in `apache-cache.conf` and enabled during image build.
 
 ## Updating comics data
 
