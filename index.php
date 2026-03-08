@@ -640,6 +640,41 @@
             }
         });
 
+        function shouldIgnoreNavigationHotkeys(event) {
+            if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+                return true;
+            }
+
+            if (event.repeat) {
+                return true;
+            }
+
+            const activeElement = document.activeElement;
+            if (!activeElement) {
+                return false;
+            }
+
+            const tagName = activeElement.tagName;
+            return activeElement.isContentEditable || tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT';
+        }
+
+        window.addEventListener('keydown', (event) => {
+            if (comicFiles.length === 0 || shouldIgnoreNavigationHotkeys(event)) {
+                return;
+            }
+
+            if (event.key === 'ArrowLeft' && currentComicIndex > 0) {
+                event.preventDefault();
+                loadComic(currentComicIndex - 1);
+                return;
+            }
+
+            if (event.key === 'ArrowRight' && currentComicIndex < comicFiles.length - 1) {
+                event.preventDefault();
+                loadComic(currentComicIndex + 1);
+            }
+        });
+
         function formatDate(dateString) {
             try {
                 const [year, month, day] = dateString.split('-');
