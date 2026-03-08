@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Added
+- Added `api/current.php` as a native-friendly endpoint that always serves the latest comic image without requiring query parameters.
+
 ## [v1.1.0] - 2026-03-08
 
 ### Changed

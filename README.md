@@ -92,6 +92,7 @@ If you change `COMICS_ARCHIVE_URL`, always set the matching `COMICS_ARCHIVE_SHA2
 
 For native clients that only need the comic image (no web viewer rendering), use:
 
+- `GET /api/current.php` to fetch the latest comic (no query params required)
 - `GET /api/comic.php?date=YYYY-MM-DD` to fetch a comic for a specific date
 - `GET /api/comic.php?latest=1` to fetch the most recent comic in the archive
 - add `&download=1` to force attachment download behavior
@@ -99,6 +100,7 @@ For native clients that only need the comic image (no web viewer rendering), use
 Examples:
 
 ```bash
+curl -L -o latest.gif "http://localhost/api/current.php"
 curl -o comic.gif "http://localhost/api/comic.php?date=1989-04-16"
 curl -L -o latest.gif "http://localhost/api/comic.php?latest=1"
 ```
