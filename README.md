@@ -88,6 +88,21 @@ docker run -d --restart unless-stopped -p 80:80 \
 
 If you change `COMICS_ARCHIVE_URL`, always set the matching `COMICS_ARCHIVE_SHA256` value. The container now refuses to extract archives when checksum verification fails.
 
+## Android download API
+
+For native clients that only need the comic image (no web viewer rendering), use:
+
+- `GET /api/comic.php?date=YYYY-MM-DD` to fetch a comic for a specific date
+- `GET /api/comic.php?latest=1` to fetch the most recent comic in the archive
+- add `&download=1` to force attachment download behavior
+
+Examples:
+
+```bash
+curl -o comic.gif "http://localhost/api/comic.php?date=1989-04-16"
+curl -L -o latest.gif "http://localhost/api/comic.php?latest=1"
+```
+
 ## HTTP caching policy
 
 The image enables Apache response caching headers:
