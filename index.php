@@ -289,27 +289,33 @@
             strict: {
                 whiteThreshold: 248,
                 minWhiteRatio: 0.993,
+                nearWhiteRatio: 0.92,
                 rowSampleDivisor: 300,
                 edgeMarginRatio: 0.04,
                 minSeparatorWidthRatio: 0.003,
+                maxBridgeGapRatio: 0.0025,
                 minPanelWidthRatio: 0.10,
                 maxPanelCount: 6
             },
             normal: {
                 whiteThreshold: 245,
                 minWhiteRatio: 0.985,
+                nearWhiteRatio: 0.88,
                 rowSampleDivisor: 250,
                 edgeMarginRatio: 0.03,
                 minSeparatorWidthRatio: 0.002,
+                maxBridgeGapRatio: 0.003,
                 minPanelWidthRatio: 0.08,
                 maxPanelCount: 7
             },
             loose: {
                 whiteThreshold: 238,
                 minWhiteRatio: 0.965,
+                nearWhiteRatio: 0.82,
                 rowSampleDivisor: 220,
                 edgeMarginRatio: 0.02,
                 minSeparatorWidthRatio: 0.001,
+                maxBridgeGapRatio: 0.004,
                 minPanelWidthRatio: 0.07,
                 maxPanelCount: 8
             }
@@ -405,7 +411,11 @@
                 sampledRows.push(y);
             }
 
-            const whiteColumns = new Array(imageWidth).fill(false);
+            if (sampledRows[sampledRows.length - 1] !== imageHeight - 1) {
+                sampledRows.push(imageHeight - 1);
+            }
+
+            const whiteRatios = new Array(imageWidth).fill(0);
 
             for (let x = 0; x < imageWidth; x++) {
                 let whitePixelCount = 0;
@@ -419,7 +429,54 @@
                         whitePixelCount++;
                     }
                 }
-                whiteColumns[x] = (whitePixelCount / sampledRows.length) >= preset.minWhiteRatio;
+                whiteRatios[x] = whitePixelCount / sampledRows.length;
+            }
+
+            const smoothedRatios = new Array(imageWidth).fill(0);
+            const smoothingRadius = 2;
+            for (let x = 0; x < imageWidth; x++) {
+                const windowStart = Math.max(0, x - smoothingRadius);
+                const windowEnd = Math.min(imageWidth - 1, x + smoothingRadius);
+                let ratioSum = 0;
+                let ratioCount = 0;
+                for (let sampleX = windowStart; sampleX <= windowEnd; sampleX++) {
+                    ratioSum += whiteRatios[sampleX];
+                    ratioCount++;
+                }
+                smoothedRatios[x] = ratioSum / ratioCount;
+            }
+
+            const whiteColumns = new Array(imageWidth).fill(false);
+            for (let x = 0; x < imageWidth; x++) {
+                const isStrongSeparator = smoothedRatios[x] >= preset.minWhiteRatio;
+                const isNearSeparator = whiteRatios[x] >= preset.nearWhiteRatio;
+                whiteColumns[x] = isStrongSeparator || isNearSeparator;
+            }
+
+            const maxBridgeGap = Math.max(1, Math.floor(imageWidth * preset.maxBridgeGapRatio));
+            let gapStart = -1;
+            for (let x = 0; x < imageWidth; x++) {
+                if (!whiteColumns[x]) {
+                    if (gapStart === -1) {
+                        gapStart = x;
+                    }
+                    continue;
+                }
+
+                if (gapStart === -1) {
+                    continue;
+                }
+
+                const gapEnd = x - 1;
+                const gapLength = gapEnd - gapStart + 1;
+                const leftIsWhite = gapStart > 0 && whiteColumns[gapStart - 1];
+                const rightIsWhite = whiteColumns[x];
+                if (leftIsWhite && rightIsWhite && gapLength <= maxBridgeGap) {
+                    for (let fillX = gapStart; fillX <= gapEnd; fillX++) {
+                        whiteColumns[fillX] = true;
+                    }
+                }
+                gapStart = -1;
             }
 
             const separatorRuns = [];
