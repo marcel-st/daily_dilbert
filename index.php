@@ -13,6 +13,8 @@
         body {
             font-family: 'Roboto', sans-serif;
             margin: 0;
+            background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+            color: #0f172a;
         }
         .loading {
             position: fixed;
@@ -20,7 +22,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(248, 250, 252, 0.88);
+            backdrop-filter: blur(2px);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -29,7 +32,7 @@
         .loading-spinner {
             border: 8px solid rgba(0, 0, 0, 0.1);
             border-radius: 50%;
-            border-top-color: #007bff;
+            border-top-color: #2563eb;
             width: 50px;
             height: 50px;
             animation: spin 1s linear infinite;
@@ -71,8 +74,8 @@
         .comic-panel img {
             max-width: 100%;
             height: auto;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 24px rgba(2, 6, 23, 0.15);
         }
         #navigation {
             display: flex;
@@ -88,8 +91,10 @@
             border-radius: 0.375rem;
             font-weight: 500;
             color: white;
-            background-color: #3b82f6;
-            transition: background-color 0.3s ease;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            border: 1px solid rgba(30, 64, 175, 0.4);
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+            transition: transform 0.15s ease, filter 0.2s ease;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
@@ -97,12 +102,14 @@
             white-space: nowrap;
         }
         #prev-button:hover, #next-button:hover {
-            background-color: #2563eb;
+            transform: translateY(-1px);
+            filter: brightness(1.05);
         }
         #prev-button:disabled, #next-button:disabled {
             background-color: #9ca3af;
             cursor: not-allowed;
             opacity: 0.6;
+            box-shadow: none;
         }
         .container {
             width: min(980px, 100%);
@@ -112,6 +119,12 @@
             padding-right: 1rem;
             margin-top: 1rem;
             margin-bottom: 1rem;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            border-radius: 1rem;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
         }
         .flex-col {
             flex-direction: column;
@@ -120,8 +133,9 @@
         }
         #comic-date {
             text-align: center;
-            font-size: 0.875rem;
-            color: #6b7280;
+            font-size: 0.95rem;
+            color: #334155;
+            font-weight: 500;
             margin-top: 0.5rem;
         }
         #search-form {
@@ -135,27 +149,32 @@
         #search-input {
             padding: 0.5rem;
             border-radius: 0.375rem;
-            border: 1px solid #d1d5db;
+            border: 1px solid #cbd5e1;
             width: min(100%, 280px);
             min-height: 44px;
+            background: white;
         }
         #search-button {
             padding: 0.5rem 1rem;
             min-height: 44px;
             border-radius: 0.375rem;
-            background-color: #3b82f6;
+            background: linear-gradient(135deg, #2563eb, #4338ca);
             color: white;
             font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            border: 1px solid rgba(30, 64, 175, 0.4);
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+            transition: transform 0.15s ease, filter 0.2s ease;
         }
         #search-button:hover {
-            background-color: #2563eb;
+            transform: translateY(-1px);
+            filter: brightness(1.05);
         }
         #search-button:disabled{
             background-color: #9ca3af;
             cursor: not-allowed;
             opacity: 0.6;
+            box-shadow: none;
         }
         @media (max-width: 640px) {
             .container {
@@ -163,6 +182,7 @@
                 padding-right: 0.75rem;
                 margin-top: 0.75rem;
                 margin-bottom: 0.75rem;
+                border-radius: 0.875rem;
             }
             #search-form {
                 width: 100%;
@@ -191,6 +211,7 @@
             .container {
                 padding-left: 0.5rem;
                 padding-right: 0.5rem;
+                border-radius: 0.75rem;
             }
             #search-form {
                 gap: 0.375rem;
